@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>儲能櫃冷卻能力計算</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --line: #d9dee8;
+      --head: #1f2a44;
+      --input-red: #d93025;
+      --result: #0b57d0;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: #1a1a1a;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      line-height: 1.5;
+      padding: 24px;
+    }
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    }
+    .title {
+      background: var(--head);
+      color: #fff;
+      padding: 16px 20px;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    th,
+    td {
+      border: 1px solid var(--line);
+      padding: 10px;
+      vertical-align: middle;
+    }
+    th {
+      background: #eef3fd;
+      text-align: left;
+      font-weight: 700;
+    }
+    .section {
+      background: #e8efff;
+      color: #1c3f94;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .input-cell input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border: 1px solid #f2b8b5;
+      border-radius: 6px;
+      color: var(--input-red);
+      font-weight: 700;
+      background: #fff8f7;
+    }
+    .note {
+      color: #6b7280;
+      font-size: 0.92rem;
+    }
+    .result-row td {
+      background: #f7faff;
+      font-weight: 700;
+    }
+    .result-value {
+      color: var(--result);
+      font-variant-numeric: tabular-nums;
+    }
+    .formula {
+      margin: 16px 20px 24px;
+      padding: 12px;
+      border: 1px dashed #aec4f8;
+      background: #f5f9ff;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">儲能櫃空調冷卻能力計算（繁體中文）</div>
+    <table>
+      <colgroup>
+        <col style="width: 30%" />
+        <col style="width: 18%" />
+        <col style="width: 12%" />
+        <col style="width: 40%" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>項目</th>
+          <th>輸入值（紅字）</th>
+          <th>單位</th>
+          <th>說明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="section"><td colspan="4">一、內部熱負載參數</td></tr>
+        <tr>
+          <td>PCS 額定功率</td>
+          <td class="input-cell"><input id="pcsPower" type="number" step="any" value="250" /></td>
+          <td>kW</td>
+          <td class="note">功率調節系統的額定功率</td>
+        </tr>
+        <tr>
+          <td>PCS 轉換效率</td>
+          <td class="input-cell"><input id="pcsEff" type="number" step="any" value="0.97" /></td>
+          <td>比值或%</td>
+          <td class="note">可輸入 0.97 或 97</td>
+        </tr>
+        <tr>
+          <td>電池最大充/放電功率</td>
+          <td class="input-cell"><input id="batPower" type="number" step="any" value="500" /></td>
+          <td>kW</td>
+          <td class="note">取充/放電功率中較大者</td>
+        </tr>
+        <tr>
+          <td>電池充/放電效率</td>
+          <td class="input-cell"><input id="batEff" type="number" step="any" value="0.96" /></td>
+          <td>比值或%</td>
+          <td class="note">以產生較多熱的效率為準</td>
+        </tr>
+        <tr>
+          <td>其他設備功耗</td>
+          <td class="input-cell"><input id="otherPowerW" type="number" step="any" value="1000" /></td>
+          <td>W</td>
+          <td class="note">BMS、控制器、照明等總功耗</td>
+        </tr>
+
+        <tr class="section"><td colspan="4">二、外部熱負載參數</td></tr>
+        <tr>
+          <td>櫃體總表面積</td>
+          <td class="input-cell"><input id="surfaceArea" type="number" step="any" value="90" /></td>
+          <td>m²</td>
+          <td class="note">20 呎櫃約 90m²，40 呎櫃約 150m²</td>
+        </tr>
+        <tr>
+          <td>櫃體總熱傳導係數（U 值）</td>
+          <td class="input-cell"><input id="uValue" type="number" step="any" value="0.8" /></td>
+          <td>W/m²·K</td>
+          <td class="note">取決於櫃體隔熱材料與厚度</td>
+        </tr>
+        <tr>
+          <td>最高室外環境溫度</td>
+          <td class="input-cell"><input id="outTemp" type="number" step="any" value="40" /></td>
+          <td>°C</td>
+          <td class="note">您所在地區夏季的極端最高溫</td>
+        </tr>
+        <tr>
+          <td>期望櫃內設定溫度</td>
+          <td class="input-cell"><input id="inTemp" type="number" step="any" value="25" /></td>
+          <td>°C</td>
+          <td class="note">維持電池最佳效能的溫度</td>
+        </tr>
+        <tr>
+          <td>日照等效溫差</td>
+          <td class="input-cell"><input id="solarDelta" type="number" step="any" value="15" /></td>
+          <td>°C</td>
+          <td class="note">額外考慮太陽輻射，經驗值 10~20°C</td>
+        </tr>
+
+        <tr class="section"><td colspan="4">三、安全裕量</td></tr>
+        <tr>
+          <td>安全裕量（Safety Factor）</td>
+          <td class="input-cell"><input id="safety" type="number" step="any" value="0.2" /></td>
+          <td>比值或%</td>
+          <td class="note">建議值 15% ~ 25%</td>
+        </tr>
+
+        <tr class="section"><td colspan="4">計算結果</td></tr>
+        <tr class="result-row">
+          <td>最終所需冷卻能力（對應 B24）</td>
+          <td class="result-value" id="resKW" colspan="3">-</td>
+        </tr>
+        <tr class="result-row">
+          <td>BTU 值（對應 B25）</td>
+          <td class="result-value" id="resBTU" colspan="3">-</td>
+        </tr>
+        <tr class="result-row">
+          <td>冷凍噸（對應 B26）</td>
+          <td class="result-value" id="resRT" colspan="3">-</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="formula">
+      <strong>計算邏輯：</strong><br />
+      內部熱負載 = PCS 額定功率 × (1/PCS效率 - 1) + 電池功率 × (1/電池效率 - 1) + 其他設備功耗/1000<br />
+      外部熱負載 = 櫃體表面積 × U 值 × [(室外溫度 - 室內設定溫度) + 日照等效溫差] / 1000<br />
+      B24 最終冷卻能力(kW) = (內部熱負載 + 外部熱負載) × (1 + 安全裕量)<br />
+      B25 BTU/hr = B24 × 3412.142<br />
+      B26 冷凍噸(RT) = B24 ÷ 3.517
+    </div>
+  </div>
+
+  <script>
+    const ids = [
+      "pcsPower", "pcsEff", "batPower", "batEff", "otherPowerW",
+      "surfaceArea", "uValue", "outTemp", "inTemp", "solarDelta", "safety"
+    ];
+
+    const asRatio = (v) => (v > 1 ? v / 100 : v);
+
+    function n(id) {
+      const v = parseFloat(document.getElementById(id).value);
+      return Number.isFinite(v) ? v : 0;
+    }
+
+    function fmt(v, digits = 1) {
+      return v.toLocaleString("zh-TW", {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      });
+    }
+
+    function calc() {
+      const pcsPower = n("pcsPower");
+      const pcsEff = asRatio(n("pcsEff"));
+      const batPower = n("batPower");
+      const batEff = asRatio(n("batEff"));
+      const otherPowerW = n("otherPowerW");
+      const area = n("surfaceArea");
+      const u = n("uValue");
+      const outT = n("outTemp");
+      const inT = n("inTemp");
+      const solar = n("solarDelta");
+      const safety = asRatio(n("safety"));
+
+      const internalHeat = pcsPower * (1 / pcsEff - 1) + batPower * (1 / batEff - 1) + otherPowerW / 1000;
+      const externalHeat = area * u * ((outT - inT) + solar) / 1000;
+      const b24 = (internalHeat + externalHeat) * (1 + safety);
+      const b25 = b24 * 3412.142;
+      const b26 = b24 / 3.517;
+
+      document.getElementById("resKW").textContent = `${fmt(b24)} kW`;
+      document.getElementById("resBTU").textContent = `${fmt(b25)} BTU/hr`;
+      document.getElementById("resRT").textContent = `${fmt(b26)} 冷凍噸(RT)`;
+    }
+
+    ids.forEach((id) => document.getElementById(id).addEventListener("input", calc));
+    calc();
+  </script>
+</body>
+</html>
